@@ -5,8 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: "https://d-brsilva.github.io/pomodoro-todo-zen/",
+  base: "/pomodoro-todo-zen/",
   },
   plugins: [
     react(),
