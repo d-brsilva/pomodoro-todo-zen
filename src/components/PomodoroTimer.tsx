@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
@@ -108,15 +109,15 @@ const PomodoroTimer: React.FC = () => {
     }
   };
 
-  // Format seconds to mm:ss
+  // Calculate progress percentage for the progress bar
+  const progressPercent = 100 - ((timeLeft / customTime[mode]) * 100);
+
+  // Format time for screen readers and debugging
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
-  // Determine progress percentage for visual indicator
-  const progressPercent = (timeLeft / customTime[mode]) * 100;
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -134,11 +135,22 @@ const PomodoroTimer: React.FC = () => {
 
         <CardContent className="pb-0">
           <div className="relative flex flex-col items-center justify-center">
-            <div 
-              className={`text-5xl font-bold my-8 ${isRunning ? 'pulse' : ''}`}
-              style={{ color: mode === 'work' ? 'hsl(var(--primary))' : mode === 'shortBreak' ? 'hsl(160, 84%, 39%)' : 'hsl(220, 84%, 39%)' }}
-            >
-              {formatTime(timeLeft)}
+            {/* Progress bar to show time remaining */}
+            <div className="w-full my-8">
+              <Progress 
+                value={progressPercent} 
+                className={`h-6 ${isRunning ? 'pulse' : ''}`} 
+                aria-label={`Time remaining: ${formatTime(timeLeft)}`} 
+                style={{ 
+                  backgroundColor: 'hsl(var(--secondary))',
+                  '--progress-fill': mode === 'work' 
+                    ? 'hsl(var(--primary))' 
+                    : mode === 'shortBreak' 
+                      ? 'hsl(160, 84%, 39%)' 
+                      : 'hsl(220, 84%, 39%)'
+                } as React.CSSProperties}
+              />
+              <span className="sr-only">{formatTime(timeLeft)}</span>
             </div>
             
             <div className="flex gap-4 mb-6 w-full justify-center">
