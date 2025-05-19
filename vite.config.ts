@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "/pomodoro-todo-zen/",
+  base: "https://d-brsilva.github.io/pomodoro-todo-zen/",
   },
   plugins: [
     react(),
