@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
@@ -28,6 +28,7 @@ const PomodoroTimer: React.FC = () => {
   
   const timerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize audio on first render
   useEffect(() => {
@@ -95,28 +96,30 @@ const PomodoroTimer: React.FC = () => {
     setTimeLeft(customTime[newMode]);
   };
 
-  // Function to adjust custom time settings
-  const handleCustomTimeChange = (value: number[], modeToChange: TimerMode) => {
-    const newTimeInSeconds = value[0] * 60; // Convert minutes to seconds
-    setCustomTime(prev => ({
-      ...prev,
-      [modeToChange]: newTimeInSeconds
-    }));
-    
-    // If we're adjusting the current mode's time, update the timer
-    if (modeToChange === mode && !isRunning) {
-      setTimeLeft(newTimeInSeconds);
-    }
-  };
-
-  // Calculate progress percentage for the progress bar
-  const progressPercent = 100 - ((timeLeft / customTime[mode]) * 100);
-
-  // Format time for screen readers and debugging
+  // Function to format time for display
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Function to handle custom time input
+  const handleMinutesInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const minutes = parseInt(e.target.value) || 0;
+    // Limit maximum minutes based on mode
+    const maxMinutes = mode === 'work' ? 60 : 30;
+    const validMinutes = Math.min(Math.max(1, minutes), maxMinutes);
+    
+    const newTimeInSeconds = validMinutes * 60;
+    setCustomTime(prev => ({
+      ...prev,
+      [mode]: newTimeInSeconds
+    }));
+    
+    // If we're not running, update the current timer
+    if (!isRunning) {
+      setTimeLeft(newTimeInSeconds);
+    }
   };
 
   return (
@@ -135,22 +138,11 @@ const PomodoroTimer: React.FC = () => {
 
         <CardContent className="pb-0">
           <div className="relative flex flex-col items-center justify-center">
-            {/* Progress bar to show time remaining */}
-            <div className="w-full my-8">
-              <Progress 
-                value={progressPercent} 
-                className={`h-6 ${isRunning ? 'pulse' : ''}`} 
-                aria-label={`Time remaining: ${formatTime(timeLeft)}`} 
-                style={{ 
-                  backgroundColor: 'hsl(var(--secondary))',
-                  '--progress-fill': mode === 'work' 
-                    ? 'hsl(var(--primary))' 
-                    : mode === 'shortBreak' 
-                      ? 'hsl(160, 84%, 39%)' 
-                      : 'hsl(220, 84%, 39%)'
-                } as React.CSSProperties}
-              />
-              <span className="sr-only">{formatTime(timeLeft)}</span>
+            {/* Timer display */}
+            <div className="w-full my-8 flex justify-center">
+              <div className={`text-5xl font-bold ${isRunning ? 'pulse' : ''}`} aria-live="polite">
+                {formatTime(timeLeft)}
+              </div>
             </div>
             
             <div className="flex gap-4 mb-6 w-full justify-center">
@@ -177,15 +169,17 @@ const PomodoroTimer: React.FC = () => {
                 Customize {mode === 'work' ? 'Work' : mode === 'shortBreak' ? 'Short Break' : 'Long Break'} Time (minutes):
               </p>
               <div className="flex items-center gap-4">
-                <span className="text-xs w-6">{Math.floor(customTime[mode] / 60)}</span>
-                <Slider 
-                  value={[Math.floor(customTime[mode] / 60)]} 
+                <Input 
+                  type="number"
+                  ref={inputRef}
+                  value={Math.floor(customTime[mode] / 60)}
+                  onChange={handleMinutesInput}
+                  className="w-20"
                   min={1}
                   max={mode === 'work' ? 60 : 30}
-                  step={1}
-                  onValueChange={(value) => handleCustomTimeChange(value, mode)}
                   disabled={isRunning}
                 />
+                <span className="text-sm">minutes</span>
               </div>
             </div>
           </div>
